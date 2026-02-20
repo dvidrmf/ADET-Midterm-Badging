@@ -16,26 +16,22 @@ class GradeCalcModule extends ToolModule {
   Widget buildBody(BuildContext context) => const _GradeCalcBody();
 }
 
-// --------------- Data Model ---------------
-
 class _GradeEntry {
   final TextEditingController subjectCtrl;
   final TextEditingController gradeCtrl;
-  final TextEditingController weightCtrl;
+  final TextEditingController unitsCtrl;
 
-  _GradeEntry({String subject = '', String grade = '', String weight = ''})
-    : subjectCtrl = TextEditingController(text: subject),
-      gradeCtrl = TextEditingController(text: grade),
-      weightCtrl = TextEditingController(text: weight);
+  _GradeEntry({String subject = '', String grade = '', String units = ''})
+      : subjectCtrl = TextEditingController(text: subject),
+        gradeCtrl = TextEditingController(text: grade),
+        unitsCtrl = TextEditingController(text: units);
 
   void dispose() {
     subjectCtrl.dispose();
     gradeCtrl.dispose();
-    weightCtrl.dispose();
+    unitsCtrl.dispose();
   }
 }
-
-// --------------- Stateful Widget ---------------
 
 class _GradeCalcBody extends StatefulWidget {
   const _GradeCalcBody();
@@ -47,18 +43,52 @@ class _GradeCalcBody extends StatefulWidget {
 class _GradeCalcBodyState extends State<_GradeCalcBody>
     with TickerProviderStateMixin {
   final List<_GradeEntry> _entries = [
-    _GradeEntry(subject: 'Mathematics', grade: '', weight: ''),
-    _GradeEntry(subject: 'English', grade: '', weight: ''),
-    _GradeEntry(subject: 'Science', grade: '', weight: ''),
+    _GradeEntry(subject: 'Math 101', units: '3'),
+    _GradeEntry(subject: 'English 101', units: '3'),
+    _GradeEntry(subject: 'Physics 101', units: '3'),
+    _GradeEntry(subject: 'PE 1', units: '2'),
   ];
 
-  double? _finalGrade;
+  double? _gpa;
   bool _showConfetti = false;
   final List<_ConfettiParticle> _particles = [];
   Timer? _confettiTimer;
-
-  // Animation controllers for confetti
   late List<AnimationController> _confettiControllers;
+
+  double _percentToGradePoint(double percent) {
+    if (percent >= 99) return 1.00;
+    if (percent >= 95) return 1.25;
+    if (percent >= 90) return 1.50;
+    if (percent >= 85) return 1.75;
+    if (percent >= 80) return 2.00;
+    if (percent >= 75) return 2.25;
+    if (percent >= 70) return 2.50;
+    if (percent >= 65) return 2.75;
+    if (percent >= 60) return 3.00;
+    return 5.00;
+  }
+
+  String _gpToDescription(double gp) {
+    if (gp <= 1.00) return 'Excellent';
+    if (gp <= 1.50) return 'Very Good';
+    if (gp <= 2.00) return 'Good';
+    if (gp <= 2.50) return 'Satisfactory';
+    if (gp <= 3.00) return 'Passing';
+    return 'Failing';
+  }
+
+  String _gpToEquivalence(double gp) {
+    if (gp <= 1.00) return '99–100%';
+    if (gp <= 1.25) return '95–98%';
+    if (gp <= 1.50) return '90–94%';
+    if (gp <= 1.75) return '85–89%';
+    if (gp <= 2.00) return '80–84%';
+    if (gp <= 2.25) return '75–79%';
+    if (gp <= 2.50) return '70–74%';
+    if (gp <= 2.75) return '65–69%';
+    if (gp <= 3.00) return '60–64%';
+    return '<60%';
+  }
 
   @override
   void initState() {
@@ -87,52 +117,44 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
     _entries[i].dispose();
     setState(() {
       _entries.removeAt(i);
-      _finalGrade = null;
+      _gpa = null;
     });
   }
 
   void _calculate() {
-    double totalWeightedGrade = 0;
-    double totalWeight = 0;
+    double totalWeightedGP = 0;
+    double totalUnits = 0;
     bool hasError = false;
 
     for (final e in _entries) {
-      final grade = double.tryParse(e.gradeCtrl.text);
-      final weight = double.tryParse(e.weightCtrl.text);
-
-      if (grade == null || weight == null) {
+      final percent = double.tryParse(e.gradeCtrl.text);
+      final units = double.tryParse(e.unitsCtrl.text);
+      if (percent == null || units == null) {
         hasError = true;
         break;
       }
-      totalWeightedGrade += grade * weight;
-      totalWeight += weight;
+      totalWeightedGP += _percentToGradePoint(percent) * units;
+      totalUnits += units;
     }
 
-    if (hasError || totalWeight == 0) {
+    if (hasError || totalUnits == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            '⚠️ Fill in all grades and weights!',
-            style: TextStyle(color: Colors.white),
-          ),
+          content: const Text('⚠️ Fill in all grades and units!',
+              style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.red.shade800,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+              borderRadius: BorderRadius.circular(10)),
           margin: const EdgeInsets.all(16),
         ),
       );
       return;
     }
 
-    final result = totalWeightedGrade / totalWeight;
-    setState(() {
-      _finalGrade = result;
-    });
-
+    final result = totalWeightedGP / totalUnits;
+    setState(() => _gpa = result);
     _triggerConfetti();
-
     Future.delayed(const Duration(milliseconds: 600), () {
       if (mounted) _showCongratsDialog(result);
     });
@@ -154,16 +176,11 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
         duration: Duration(milliseconds: 1500 + rng.nextInt(1000)),
       );
       _confettiControllers.add(ctrl);
-
-      _particles.add(
-        _ConfettiParticle(
-          emoji: emojis[rng.nextInt(emojis.length)],
-          x: rng.nextDouble(),
-          delay: rng.nextDouble() * 0.5,
-          controller: ctrl,
-        ),
-      );
-
+      _particles.add(_ConfettiParticle(
+        emoji: emojis[rng.nextInt(emojis.length)],
+        x: rng.nextDouble(),
+        controller: ctrl,
+      ));
       Future.delayed(
         Duration(milliseconds: (rng.nextDouble() * 400).toInt()),
         () {
@@ -173,22 +190,14 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
     }
 
     setState(() => _showConfetti = true);
-
     _confettiTimer?.cancel();
     _confettiTimer = Timer(const Duration(seconds: 4), () {
       if (mounted) setState(() => _showConfetti = false);
     });
   }
 
-  void _showCongratsDialog(double grade) {
+  void _showCongratsDialog(double gpa) {
     final theme = context.read<AppState>().theme;
-    final gradeLabel = grade >= 90
-        ? '🏆 Outstanding!'
-        : grade >= 80
-        ? '⭐ Great Job!'
-        : grade >= 75
-        ? '👍 You Passed!'
-        : '📚 Keep Working!';
 
     showDialog(
       context: context,
@@ -210,34 +219,36 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              '✨ ✨ ✨',
-              style: const TextStyle(fontSize: 32),
-              textAlign: TextAlign.center,
-            ),
+            const Text('✨ ✨ ✨',
+                style: TextStyle(fontSize: 32),
+                textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            Text(
-              'Weighted Average:',
-              style: const TextStyle(color: Colors.white54, fontSize: 14),
-            ),
+            const Text('Your GWA',
+                style: TextStyle(color: Colors.white54, fontSize: 13)),
             const SizedBox(height: 8),
             Text(
-              '${grade.toStringAsFixed(2)}',
-              style: TextStyle(
+              gpa.toStringAsFixed(2),
+              style: const TextStyle(
                 color: Colors.white,
-                fontSize: 48,
+                fontSize: 52,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
+            Text(
+              _gpToEquivalence(gpa),
+              style: TextStyle(color: theme.accent, fontSize: 14),
+            ),
+            const SizedBox(height: 10),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 20, vertical: 8),
               decoration: BoxDecoration(
-                color: theme.primary.withOpacity(0.3),
+                color: theme.primary.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                gradeLabel,
+                _gpToDescription(gpa),
                 style: TextStyle(
                   color: theme.accent,
                   fontWeight: FontWeight.bold,
@@ -261,6 +272,33 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
     );
   }
 
+  Widget _scaleRow(String gp, String equiv, String desc, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 50,
+            child: Text(gp,
+                style: TextStyle(
+                    color: color,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold)),
+          ),
+          SizedBox(
+            width: 70,
+            child: Text(equiv,
+                style:
+                    const TextStyle(color: Colors.white54, fontSize: 11)),
+          ),
+          Text(desc,
+              style:
+                  const TextStyle(color: Colors.white38, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
@@ -268,17 +306,16 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
 
     return Stack(
       children: [
-        // ---- Main Content ----
         ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // Header
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: theme.primary.withOpacity(0.15),
+                color: theme.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: theme.primary.withOpacity(0.3)),
+                border: Border.all(
+                    color: theme.primary.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -286,88 +323,213 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
                   const SizedBox(width: 10),
                   const Expanded(
                     child: Text(
-                      'Enter each subject\'s grade (0–100) and its weight percentage.',
-                      style: TextStyle(color: Colors.white60, fontSize: 13),
+                      'Enter grade (%) and units per subject. GWA is computed using the college grade point system.',
+                      style: TextStyle(
+                          color: Colors.white60, fontSize: 12),
                     ),
                   ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.08)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('📊 Grading Scale',
+                      style: TextStyle(
+                          color: theme.accent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13)),
+                  const SizedBox(height: 10),
+                  _scaleRow('1.00', '99–100%', 'Excellent', theme.accent),
+                  _scaleRow('1.25', '95–98%', 'Very Good', Colors.white70),
+                  _scaleRow('1.50', '90–94%', 'Very Good', Colors.white70),
+                  _scaleRow('1.75', '85–89%', 'Good', Colors.white70),
+                  _scaleRow('2.00', '80–84%', 'Good', Colors.white70),
+                  _scaleRow('2.25', '75–79%', 'Satisfactory', Colors.white70),
+                  _scaleRow('2.50', '70–74%', 'Satisfactory', Colors.white70),
+                  _scaleRow('2.75', '65–69%', 'Passing', Colors.white70),
+                  _scaleRow('3.00', '60–64%', 'Passing', Colors.white70),
+                  _scaleRow('5.00', '<60%', 'Failing', Colors.redAccent),
                 ],
               ),
             ),
 
             const SizedBox(height: 20),
 
-            // Column Headers
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     flex: 3,
-                    child: Text(
-                      'Subject',
-                      style: TextStyle(
-                        color: Colors.white38,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    child: Text('Subject',
+                        style: TextStyle(
+                            color: Colors.white38,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600)),
                   ),
-                  const SizedBox(width: 8),
-                  const Expanded(
+                  SizedBox(width: 8),
+                  Expanded(
                     flex: 2,
-                    child: Text(
-                      'Grade',
-                      style: TextStyle(
-                        color: Colors.white38,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    child: Text('Grade %',
+                        style: TextStyle(
+                            color: Colors.white38,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600)),
                   ),
-                  const SizedBox(width: 8),
-                  const Expanded(
+                  SizedBox(width: 8),
+                  Expanded(
                     flex: 2,
-                    child: Text(
-                      'Weight %',
-                      style: TextStyle(
-                        color: Colors.white38,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    child: Text('Units',
+                        style: TextStyle(
+                            color: Colors.white38,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600)),
                   ),
-                  const SizedBox(width: 36),
+                  SizedBox(width: 8),
+                  Expanded(
+                    flex: 2,
+                    child: Text('GP',
+                        style: TextStyle(
+                            color: Colors.white38,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                  SizedBox(width: 36),
                 ],
               ),
             ),
-
             const SizedBox(height: 8),
 
-            // Grade Entries
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _entries.length,
-              itemBuilder: (ctx, i) => _GradeRow(
-                entry: _entries[i],
-                accentColor: theme.accent,
-                primaryColor: theme.primary,
-                onDelete: _entries.length > 1 ? () => _removeEntry(i) : null,
-              ),
+              itemBuilder: (ctx, i) {
+                final percent =
+                    double.tryParse(_entries[i].gradeCtrl.text);
+                final gpDisplay = percent != null
+                    ? _percentToGradePoint(percent).toStringAsFixed(2)
+                    : '—';
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextField(
+                          controller: _entries[i].subjectCtrl,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 13),
+                          decoration: const InputDecoration(
+                            hintText: 'Subject',
+                            hintStyle: TextStyle(
+                                color: Colors.white24, fontSize: 13),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: TextField(
+                          controller: _entries[i].gradeCtrl,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 13),
+                          onChanged: (_) => setState(() {}),
+                          decoration: const InputDecoration(
+                            hintText: '0–100',
+                            hintStyle: TextStyle(
+                                color: Colors.white24, fontSize: 13),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: TextField(
+                          controller: _entries[i].unitsCtrl,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 13),
+                          decoration: const InputDecoration(
+                            hintText: 'Units',
+                            hintStyle: TextStyle(
+                                color: Colors.white24, fontSize: 13),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: theme.primary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color:
+                                    theme.primary.withValues(alpha: 0.3)),
+                          ),
+                          child: Text(
+                            gpDisplay,
+                            style: TextStyle(
+                              color: theme.accent,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 36,
+                        child: _entries.length > 1
+                            ? IconButton(
+                                padding: EdgeInsets.zero,
+                                icon: const Icon(
+                                    Icons.remove_circle_outline,
+                                    color: Colors.redAccent,
+                                    size: 20),
+                                onPressed: () => _removeEntry(i),
+                              )
+                            : const SizedBox(),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
 
             const SizedBox(height: 12),
 
-            // Add Row Button
             TextButton.icon(
               onPressed: _addEntry,
               icon: Icon(Icons.add_circle_outline, color: theme.accent),
-              label: Text('Add Subject', style: TextStyle(color: theme.accent)),
+              label: Text('Add Subject',
+                  style: TextStyle(color: theme.accent)),
             ),
 
             const SizedBox(height: 20),
 
-            // Calculate Button
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -375,14 +537,14 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
                 onPressed: _calculate,
                 icon: const Icon(Icons.calculate),
                 label: const Text(
-                  'CALCULATE GRADE',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  'COMPUTE GWA',
+                  style: TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
 
-            // Result Display
-            if (_finalGrade != null) ...[
+            if (_gpa != null) ...[
               const SizedBox(height: 24),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 500),
@@ -391,8 +553,8 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      theme.primary.withOpacity(0.4),
-                      theme.secondary.withOpacity(0.2),
+                      theme.primary.withValues(alpha: 0.4),
+                      theme.secondary.withValues(alpha: 0.2),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(20),
@@ -400,16 +562,12 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
                 ),
                 child: Column(
                   children: [
-                    Text(
-                      'Final Grade',
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 14,
-                      ),
-                    ),
+                    const Text('General Weighted Average',
+                        style: TextStyle(
+                            color: Colors.white54, fontSize: 13)),
                     const SizedBox(height: 8),
                     Text(
-                      _finalGrade!.toStringAsFixed(2),
+                      _gpa!.toStringAsFixed(2),
                       style: TextStyle(
                         color: theme.accent,
                         fontSize: 56,
@@ -417,9 +575,17 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
                         letterSpacing: -1,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
-                      _getGradeRemark(_finalGrade!),
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      _gpToEquivalence(_gpa!),
+                      style: const TextStyle(
+                          color: Colors.white54, fontSize: 13),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _gpToDescription(_gpa!),
+                      style: const TextStyle(
+                          color: Colors.white, fontSize: 16),
                     ),
                   ],
                 ),
@@ -430,7 +596,6 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
           ],
         ),
 
-        // ---- Confetti Overlay ----
         if (_showConfetti)
           Positioned.fill(
             child: IgnorePointer(
@@ -444,119 +609,16 @@ class _GradeCalcBodyState extends State<_GradeCalcBody>
       ],
     );
   }
-
-  String _getGradeRemark(double g) {
-    if (g >= 95) return '🏆 Summa Cum Laude!';
-    if (g >= 90) return '⭐ Excellent!';
-    if (g >= 85) return '😊 Very Good!';
-    if (g >= 80) return '👍 Good!';
-    if (g >= 75) return '✅ Passed!';
-    return '📚 Keep Studying!';
-  }
 }
-
-// --------------- Grade Row Widget ---------------
-
-class _GradeRow extends StatelessWidget {
-  final _GradeEntry entry;
-  final Color accentColor;
-  final Color primaryColor;
-  final VoidCallback? onDelete;
-
-  const _GradeRow({
-    required this.entry,
-    required this.accentColor,
-    required this.primaryColor,
-    this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: TextField(
-              controller: entry.subjectCtrl,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
-              decoration: const InputDecoration(
-                hintText: 'Subject',
-                hintStyle: TextStyle(color: Colors.white24, fontSize: 13),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 2,
-            child: TextField(
-              controller: entry.gradeCtrl,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
-              decoration: const InputDecoration(
-                hintText: '0–100',
-                hintStyle: TextStyle(color: Colors.white24, fontSize: 13),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 2,
-            child: TextField(
-              controller: entry.weightCtrl,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
-              decoration: const InputDecoration(
-                hintText: '%',
-                hintStyle: TextStyle(color: Colors.white24, fontSize: 13),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 36,
-            child: onDelete != null
-                ? IconButton(
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(
-                      Icons.remove_circle_outline,
-                      color: Colors.redAccent,
-                      size: 20,
-                    ),
-                    onPressed: onDelete,
-                  )
-                : const SizedBox(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// --------------- Confetti Data Model + Widget ---------------
 
 class _ConfettiParticle {
   final String emoji;
-  final double x; // 0..1 horizontal position
-  final double delay;
+  final double x;
   final AnimationController controller;
 
   _ConfettiParticle({
     required this.emoji,
     required this.x,
-    required this.delay,
     required this.controller,
   });
 }
@@ -586,7 +648,8 @@ class _ConfettiWidget extends StatelessWidget {
             opacity: opacity.clamp(0.0, 1.0),
             child: Transform.scale(
               scale: scale,
-              child: Text(particle.emoji, style: const TextStyle(fontSize: 24)),
+              child: Text(particle.emoji,
+                  style: const TextStyle(fontSize: 24)),
             ),
           ),
         );
