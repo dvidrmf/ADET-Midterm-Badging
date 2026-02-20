@@ -15,8 +15,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    final name = context.read<AppState>().displayName;
-    _nameCtrl = TextEditingController(text: name);
+    _nameCtrl = TextEditingController(
+      text: context.read<AppState>().displayName,
+    );
   }
 
   @override
@@ -44,13 +45,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // ---- Avatar & Name ----
           Center(
             child: Column(
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundColor: theme.primary.withOpacity(0.3),
+                  backgroundColor: theme.primary.withValues(alpha: 0.3),
                   child: Text(
                     state.displayName.isNotEmpty
                         ? state.displayName[0].toUpperCase()
@@ -64,7 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Hi, ${state.displayName}! 👋',
+                  'Hi, ${state.displayName}!',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -74,11 +74,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-
           const SizedBox(height: 32),
-
-          // ---- Display Name Input ----
-          _SectionLabel('👤 Display Name', theme.accent),
+          Text(
+            '👤 Display Name',
+            style: TextStyle(
+              color: theme.accent,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -88,10 +92,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(
                     labelText: 'Your Name',
-                    prefixIcon: Icon(
-                      Icons.person_outline,
-                      color: Colors.white38,
-                    ),
+                    prefixIcon:
+                        Icon(Icons.person_outline, color: Colors.white38),
                   ),
                 ),
               ),
@@ -101,7 +103,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   state.setDisplayName(_nameCtrl.text);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('✅ Name updated!'),
+                      content: const Text('Name updated!'),
                       backgroundColor: Colors.green.shade800,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
@@ -115,13 +117,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 32),
-
-          // ---- Theme Picker ----
-          _SectionLabel('🎨 Theme Color', theme.accent),
+          Text(
+            'Color Theme',
+            style: TextStyle(
+              color: theme.accent,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
           const SizedBox(height: 14),
-
           ...AppThemeChoice.values.map((choice) {
             final t = kThemes[choice]!;
             final isSelected = state.themeChoice == choice;
@@ -130,13 +135,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   gradient: isSelected ? t.headerGradient : null,
-                  color: isSelected ? null : Colors.white.withOpacity(0.05),
+                  color:
+                      isSelected ? null : Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isSelected ? t.accent : Colors.white12,
@@ -145,7 +149,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: t.primary.withOpacity(0.4),
+                            color: t.primary.withValues(alpha: 0.4),
                             blurRadius: 16,
                             spreadRadius: 2,
                           ),
@@ -169,9 +173,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         t.label,
                         style: TextStyle(
                           color: isSelected ? Colors.white : Colors.white70,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
                           fontSize: 15,
                         ),
                       ),
@@ -185,21 +188,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           }),
         ],
       ),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  final Color color;
-
-  const _SectionLabel(this.text, this.color);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 15),
     );
   }
 }
