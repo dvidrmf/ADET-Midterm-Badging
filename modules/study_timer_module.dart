@@ -142,7 +142,7 @@ class _StudyTimerBodyState extends State<_StudyTimerBody>
             ),
             child: Center(
               child: Text(
-                _isFinished ? '✅ Done!' : _countdownText,
+                _isFinished ? 'Done!' : _countdownText,
                 style: TextStyle(
                   fontSize: 42,
                   fontWeight: FontWeight.bold,
@@ -224,7 +224,7 @@ class _StudyTimerBodyState extends State<_StudyTimerBody>
             ),
             child: const Center(
               child: Text(
-                'No sessions yet. Start your first one! 🎯',
+                'No sessions yet. Start your first one!',
                 style: TextStyle(color: Colors.white38),
               ),
             ),
