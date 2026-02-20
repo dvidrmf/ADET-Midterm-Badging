@@ -14,8 +14,6 @@ class ExpenseSplitterModule extends ToolModule {
   Widget buildBody(BuildContext context) => const _ExpenseSplitterBody();
 }
 
-// --------------- Stateful Widget ---------------
-
 class _ExpenseSplitterBody extends StatefulWidget {
   const _ExpenseSplitterBody();
 
@@ -62,11 +60,11 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
 
   void _calculate() {
     if (_totalController.text.trim().isEmpty) {
-      _showSnack('⚠️ Total amount cannot be empty!');
+      _showSnack('Total amount cannot be empty!');
       return;
     }
     if (_people.isEmpty) {
-      _showSnack('⚠️ Pax is 0 — add at least one person!');
+      _showSnack('Pax is 0 — add at least one person!');
       return;
     }
 
@@ -74,7 +72,7 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
     final tip = double.tryParse(_tipController.text) ?? 0;
 
     if (total <= 0) {
-      _showSnack('⚠️ Enter a valid total amount.');
+      _showSnack('Enter a valid total amount.');
       return;
     }
 
@@ -106,15 +104,18 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // ---- Banner ----
-        _SectionCard(
-          accentColor: theme.accent,
-          primaryColor: theme.primary,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.primary.withValues(alpha: 0.3)),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '💰 Bill Details',
+                'Bill Details',
                 style: TextStyle(
                   color: theme.accent,
                   fontWeight: FontWeight.bold,
@@ -153,13 +154,14 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
             ],
           ),
         ),
-
         const SizedBox(height: 16),
-
-        // ---- People List ----
-        _SectionCard(
-          accentColor: theme.accent,
-          primaryColor: theme.primary,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.primary.withValues(alpha: 0.3)),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -167,7 +169,7 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '👥 People (${_people.length})',
+                    'People (${_people.length})',
                     style: TextStyle(
                       color: theme.accent,
                       fontWeight: FontWeight.bold,
@@ -185,8 +187,6 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
                 ],
               ),
               const SizedBox(height: 12),
-
-              // Add person row
               Row(
                 children: [
                   Expanded(
@@ -195,10 +195,8 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
                         labelText: 'Name',
-                        prefixIcon: Icon(
-                          Icons.person_add,
-                          color: Colors.white38,
-                        ),
+                        prefixIcon:
+                            Icon(Icons.person_add, color: Colors.white38),
                       ),
                       onSubmitted: (_) => _addPerson(),
                     ),
@@ -208,27 +206,23 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
                     onPressed: _addPerson,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 18,
-                      ),
+                          horizontal: 16, vertical: 18),
                     ),
                     child: const Icon(Icons.add),
                   ),
                 ],
               ),
-
               const SizedBox(height: 12),
-
               if (_people.isEmpty)
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.04),
+                    color: Colors.white.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Center(
                     child: Text(
-                      'No one added yet. Add people above! 👆',
+                      'No one added yet. Add people above',
                       style: TextStyle(color: Colors.white38),
                     ),
                   ),
@@ -238,21 +232,51 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _people.length,
-                  itemBuilder: (ctx, i) => _PersonTile(
-                    name: _people[i],
-                    index: i,
-                    accentColor: theme.accent,
-                    primaryColor: theme.primary,
-                    onDelete: () => _removePerson(i),
+                  itemBuilder: (ctx, i) => Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: theme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: theme.primary.withValues(alpha: 0.25)),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 14,
+                          backgroundColor: theme.accent.withValues(alpha: 0.2),
+                          child: Text(
+                            '${i + 1}',
+                            style: TextStyle(
+                              color: theme.accent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _people[i],
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 15),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline,
+                              color: Colors.redAccent, size: 20),
+                          onPressed: () => _removePerson(i),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
             ],
           ),
         ),
-
         const SizedBox(height: 16),
-
-        // ---- Calculate Button ----
         SizedBox(
           width: double.infinity,
           height: 52,
@@ -265,10 +289,7 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
             ),
           ),
         ),
-
         const SizedBox(height: 20),
-
-        // ---- Results ----
         if (_hasResult)
           AnimatedContainer(
             duration: const Duration(milliseconds: 500),
@@ -277,22 +298,20 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  theme.primary.withOpacity(0.3),
-                  theme.secondary.withOpacity(0.2),
+                  theme.primary.withValues(alpha: 0.3),
+                  theme.secondary.withValues(alpha: 0.2),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: theme.accent.withOpacity(0.5),
-                width: 2,
-              ),
+                  color: theme.accent.withValues(alpha: 0.5), width: 2),
             ),
             child: Column(
               children: [
                 Text(
-                  '🎉 Split Result',
+                  'Split Result',
                   style: TextStyle(
                     color: theme.accent,
                     fontSize: 18,
@@ -300,17 +319,33 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _ResultRow(
-                  label: 'Total (with tip)',
-                  value: '₱${_totalWithTip.toStringAsFixed(2)}',
-                  color: Colors.white70,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Total (with tip)',
+                        style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    Text(
+                      '₱${_totalWithTip.toStringAsFixed(2)}',
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 15),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
-                _ResultRow(
-                  label: 'Each person pays',
-                  value: '₱${_amountPerPerson.toStringAsFixed(2)}',
-                  color: theme.accent,
-                  large: true,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Each person pays',
+                        style: TextStyle(color: Colors.white54, fontSize: 15)),
+                    Text(
+                      '₱${_amountPerPerson.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: theme.accent,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
                 const Divider(color: Colors.white12, height: 24),
                 ...List.generate(
@@ -322,10 +357,8 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
                         Icon(Icons.person, size: 16, color: theme.accent),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            _people[i],
-                            style: const TextStyle(color: Colors.white70),
-                          ),
+                          child: Text(_people[i],
+                              style: const TextStyle(color: Colors.white70)),
                         ),
                         Text(
                           '₱${_amountPerPerson.toStringAsFixed(2)}',
@@ -341,128 +374,6 @@ class _ExpenseSplitterBodyState extends State<_ExpenseSplitterBody> {
               ],
             ),
           ),
-      ],
-    );
-  }
-}
-
-// --------------- Helper Widgets ---------------
-
-class _SectionCard extends StatelessWidget {
-  final Widget child;
-  final Color accentColor;
-  final Color primaryColor;
-
-  const _SectionCard({
-    required this.child,
-    required this.accentColor,
-    required this.primaryColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: primaryColor.withOpacity(0.3)),
-      ),
-      child: child,
-    );
-  }
-}
-
-class _PersonTile extends StatelessWidget {
-  final String name;
-  final int index;
-  final Color accentColor;
-  final Color primaryColor;
-  final VoidCallback onDelete;
-
-  const _PersonTile({
-    required this.name,
-    required this.index,
-    required this.accentColor,
-    required this.primaryColor,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: primaryColor.withOpacity(0.25)),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: accentColor.withOpacity(0.2),
-            child: Text(
-              '${index + 1}',
-              style: TextStyle(
-                color: accentColor,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              name,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.delete_outline,
-              color: Colors.redAccent,
-              size: 20,
-            ),
-            onPressed: onDelete,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ResultRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-  final bool large;
-
-  const _ResultRow({
-    required this.label,
-    required this.value,
-    required this.color,
-    this.large = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(color: Colors.white54, fontSize: large ? 15 : 14),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            color: color,
-            fontSize: large ? 22 : 15,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
       ],
     );
   }
