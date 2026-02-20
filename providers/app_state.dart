@@ -21,7 +21,7 @@ class AppThemeData {
 
 final Map<AppThemeChoice, AppThemeData> kThemes = {
   AppThemeChoice.deepSea: const AppThemeData(
-    label: '🌊 Deep Sea',
+    label: 'Blue',
     primary: Color(0xFF0A4D8C),
     secondary: Color(0xFF1A7ABF),
     accent: Color(0xFF00D4FF),
@@ -32,7 +32,7 @@ final Map<AppThemeChoice, AppThemeData> kThemes = {
     ),
   ),
   AppThemeChoice.sunset: const AppThemeData(
-    label: '🌅 Sunset',
+    label: 'Orange',
     primary: Color(0xFFBF3A0A),
     secondary: Color(0xFFE8622A),
     accent: Color(0xFFFFAB40),
@@ -43,7 +43,7 @@ final Map<AppThemeChoice, AppThemeData> kThemes = {
     ),
   ),
   AppThemeChoice.forest: const AppThemeData(
-    label: '🌲 Forest',
+    label: 'Green',
     primary: Color(0xFF1B5E20),
     secondary: Color(0xFF388E3C),
     accent: Color(0xFF69F0AE),
@@ -66,40 +66,42 @@ class AppState extends ChangeNotifier {
   Color get accentColor => theme.accent;
 
   ThemeData get materialTheme => ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.dark(
-      primary: theme.primary,
-      secondary: theme.secondary,
-      tertiary: theme.accent,
-      surface: const Color(0xFF121212),
-    ),
-    sliderTheme: SliderThemeData(
-      activeTrackColor: theme.accent,
-      thumbColor: theme.accent,
-      overlayColor: theme.accent.withValues(alpha: 0.2),
-      inactiveTrackColor: theme.primary.withValues(alpha: 0.3),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: theme.primary,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: const Color(0xFF1E1E1E),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: theme.primary.withValues(alpha: 0.4)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: theme.accent, width: 2),
-      ),
-      labelStyle: TextStyle(color: theme.accent.withValues(alpha: 0.8)),
-    ),
-  );
+        useMaterial3: true,
+        colorScheme: ColorScheme.dark(
+          primary: theme.primary,
+          secondary: theme.secondary,
+          tertiary: theme.accent,
+          surface: const Color(0xFF121212),
+        ),
+        sliderTheme: SliderThemeData(
+          activeTrackColor: theme.accent,
+          thumbColor: theme.accent,
+          overlayColor: theme.accent.withValues(alpha: 0.2),
+          inactiveTrackColor: theme.primary.withValues(alpha: 0.3),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.primary,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF1E1E1E),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: theme.primary.withValues(alpha: 0.4)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: theme.accent, width: 2),
+          ),
+          labelStyle: TextStyle(color: theme.accent.withValues(alpha: 0.8)),
+        ),
+      );
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
