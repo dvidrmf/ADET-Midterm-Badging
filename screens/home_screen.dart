@@ -17,9 +17,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  /// -------------------------------------------------------
-  ///  THE MODULE REGISTRY — All ToolModules stored here
-  /// -------------------------------------------------------
   final List<ToolModule> modules = [
     StudyTimerModule(),
     ExpenseSplitterModule(),
@@ -33,8 +30,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D0D),
-
-      // ---- Gradient Header with Profile / Settings ----
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(80),
         child: Container(
@@ -42,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
             gradient: theme.headerGradient,
             boxShadow: [
               BoxShadow(
-                color: theme.primary.withOpacity(0.4),
+                color: theme.primary.withValues(alpha: 0.4),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -53,10 +48,9 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Row(
                 children: [
-                  // Avatar initials
                   CircleAvatar(
                     radius: 22,
-                    backgroundColor: theme.accent.withOpacity(0.2),
+                    backgroundColor: theme.accent.withValues(alpha: 0.2),
                     child: Text(
                       state.displayName.isNotEmpty
                           ? state.displayName[0].toUpperCase()
@@ -69,15 +63,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 14),
-
-                  // Greeting
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Hi, ${state.displayName} 👋',
+                          'Welcome, ${state.displayName} 👋',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -87,15 +79,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           modules[_currentIndex].title,
                           style: TextStyle(
-                            color: theme.accent.withOpacity(0.8),
+                            color: theme.accent.withValues(alpha: 0.8),
                             fontSize: 12,
                           ),
                         ),
                       ],
                     ),
                   ),
-
-                  // Settings button
                   IconButton(
                     onPressed: () {
                       Navigator.push(
@@ -113,20 +103,16 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-
-      // ---- Module Body (driven by current index) ----
       body: IndexedStack(
         index: _currentIndex,
-        children: modules.map((m) => m.buildBody(context)).toList(),
+        children: modules.map<Widget>((m) => m.buildBody(context)).toList(),
       ),
-
-      // ---- BottomNavigationBar driven by modules list ----
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF151515),
           boxShadow: [
             BoxShadow(
-              color: theme.primary.withOpacity(0.3),
+              color: theme.primary.withValues(alpha: 0.3),
               blurRadius: 16,
               offset: const Offset(0, -4),
             ),
@@ -141,12 +127,11 @@ class _HomeScreenState extends State<HomeScreen> {
           type: BottomNavigationBarType.fixed,
           elevation: 0,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          // Dynamically build items from the modules list
           items: modules
-              .map(
-                (m) =>
-                    BottomNavigationBarItem(icon: Icon(m.icon), label: m.title),
-              )
+              .map((m) => BottomNavigationBarItem(
+                    icon: Icon(m.icon),
+                    label: m.title,
+                  ))
               .toList(),
         ),
       ),
